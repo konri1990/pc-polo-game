@@ -15,17 +15,17 @@ namespace ServerTests.Runner
         [Fact]
         public void Given_InGameAlreadyMaxPlayers_When_AddNextClient_Then_ReturnStatusNotAllowedForMorePlayers()
         {
-            for(int i = 0; i<PoloGameEngine.MaxAvailableClients; i++) {
+            for(int i = 0; i<PoloGameEngine.MaxOnlineClients; i++) {
                 _gameEngine.AddPlayer($"Player{i}");
             }
 
-            _gameEngine.AddPlayer("NextPlayer").Should().Be(AddPlayerOperationResult.NotAllowedForMorePlayers);
+            _gameEngine.AddPlayer("NextPlayer").Should().Be(AddPlayerOperationResult.CannotAddMorePlayers);
         }
 
         [Fact]
         public void Given_Game_When_AllPlayersAreOnline_Then_GameIsReadyToStart()
         {
-            for(int i = 0; i<PoloGameEngine.MaxAvailableClients; i++) {
+            for(int i = 0; i<PoloGameEngine.MaxOnlineClients; i++) {
                 _gameEngine.AddPlayer($"Player{i}");
             }
 
@@ -41,16 +41,31 @@ namespace ServerTests.Runner
         }
 
         [Fact]
-        public void Given_Game_When_OnePlayerSendTheGreatestValue_Then_GetWinnerPlayer()
+        public void Given_Game_When_OnePlayerSendTheGreatestValue_Then_GetWinnerAndLostPlayer()
         {
-            _gameEngine.AddPlayer("Player1");
-            _gameEngine.AddPlayer("Player2");
+            var playerOne = "Player1";
+            var playerTwo = "Player2";
+            _gameEngine.AddPlayer(playerOne);
+            _gameEngine.AddPlayer(playerTwo);
 
-            _gameEngine.SetPlayerNumber("Player1", 2);
-            _gameEngine.SetPlayerNumber("Player2", 3);
+            _gameEngine.SetPlayerNumber(playerOne, 2);
+            _gameEngine.SetPlayerNumber(playerTwo, 3);
 
-            // _gameEngine.GetWinner().Should().Be("Player1");
-            // _gameEngine.GetWinner().Should().Be("Player1");
+            _gameEngine.GameResultForPlayer(playerOne).Should().Be(GameResulsForPlayer.Lost);
+            _gameEngine.GameResultForPlayer(playerTwo).Should().Be(GameResulsForPlayer.Won);
+        }
+
+        [Fact]
+        public void Given_Game_When_PlayerIsNotOnline_Then_ClientDisconnected()
+        {
+            var playerOne = "Player1";
+            var playerTwo = "Player2";
+            _gameEngine.AddPlayer(playerOne);
+
+            _gameEngine.SetPlayerNumber(playerOne, 2);
+
+            _gameEngine.GameResultForPlayer(playerOne).Should().Be(GameResulsForPlayer.GameNotStarted);
+            _gameEngine.GameResultForPlayer(playerTwo).Should().Be(GameResulsForPlayer.ClientDisconected);
         }
     }
 }
