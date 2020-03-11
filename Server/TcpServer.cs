@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Server.Runner;
 
 namespace Server
 {
-    class Server
+    public class TcpServer
     {
         private static IServiceProvider _serviceProvider;
 
-        static async Task Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            RegisterServices();
+            var serviceContainer = new ServiceRegistry();
+
+            _serviceProvider = serviceContainer.RegisterServices();
 
             var service = _serviceProvider.GetService<IServerRunner>();
             try
@@ -26,18 +28,6 @@ namespace Server
             {
                 DisposeServices();
             }
-        }
-
-        private static void RegisterServices()
-        {
-            var serviceCollection = new ServiceCollection();
-            
-            serviceCollection.AddLogging(configure => configure.AddConsole())
-                 .AddTransient<Server>();
-
-            serviceCollection.AddSingleton<IServerRunner, ServerRunner>();
-            
-            _serviceProvider = serviceCollection.BuildServiceProvider();
         }
 
         private static void DisposeServices()

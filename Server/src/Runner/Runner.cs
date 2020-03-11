@@ -1,13 +1,17 @@
 using System.Threading.Tasks;
 
-public interface IServerRunner {
-    Task Run();
-}
-
-class ServerRunner : IServerRunner
+namespace Server.Runner
 {
-    public Task Run()
+    public interface IServerRunner
     {
-        throw new System.NotImplementedException();
+        Task Run();
+    }
+
+    class ServerRunner : IServerRunner
+    {
+        public Task Run()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }
