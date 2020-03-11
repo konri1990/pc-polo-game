@@ -11,9 +11,8 @@ namespace Server.Runner
         {
             var serviceCollection = new ServiceCollection();
 
-            serviceCollection.AddLogging(configure => configure.AddConsole())
-                 .AddTransient<TcpServer>();
-
+            serviceCollection.AddLogging(configure => configure.AddConsole());
+            
             ConfigureCustomServices(serviceCollection);
 
             return serviceCollection.BuildServiceProvider();
