@@ -2,6 +2,7 @@
 using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Server.Game;
 
 namespace Server.Runner
 {
@@ -21,6 +22,7 @@ namespace Server.Runner
         public virtual void ConfigureCustomServices(ServiceCollection serviceCollection)
         {
             serviceCollection.AddSingleton<IServerRunner, ServerRunner>();
+            serviceCollection.AddSingleton<IPoloGameEngine, PoloGameEngine>();
         }
     }
 }

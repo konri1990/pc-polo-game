@@ -1,11 +1,13 @@
 using System;
-using System.Collections.ObjectModel;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Server.Game;
 
 namespace Server.Runner
 {
@@ -17,12 +19,14 @@ namespace Server.Runner
     internal class ServerRunner : IServerRunner
     {
         private readonly ILogger<ServerRunner> _logger;
-        private readonly ObservableCollection<TcpClient> _clients;
+        private readonly IPoloGameEngine _game;
+        private readonly ConcurrentDictionary<TcpClient, string> _clients;
 
-        public ServerRunner(ILoggerFactory loggerFactory)
+        public ServerRunner(ILoggerFactory loggerFactory, IPoloGameEngine game)
         {
             _logger = loggerFactory.CreateLogger<ServerRunner>();
-            _clients = new ObservableCollection<TcpClient>();
+            _clients = new ConcurrentDictionary<TcpClient, string>();
+            _game = game;
         }
 
         public Task Run()
@@ -45,8 +49,10 @@ namespace Server.Runner
                     _logger.LogInformation("Waiting for a connection...");
                     TcpClient client = await server.AcceptTcpClientAsync();
                     _logger.LogInformation("Connected!");
-                    _clients.Add(client);
-                    Thread t = new Thread(new ParameterizedThreadStart(HandleDeivce));
+                    var clientId = new Guid().ToString();
+                    _clients.TryAdd(client, clientId);
+                    _game.AddPlayer(clientId);
+                    Thread t = new Thread(new ParameterizedThreadStart(HandleDevice));
                 }
             }
             catch (SocketException e)
@@ -56,7 +62,7 @@ namespace Server.Runner
             }
         }
 
-        public void HandleDeivce(Object obj)
+        public void HandleDevice(Object obj)
         {
             TcpClient client = (TcpClient)obj;
             var stream = client.GetStream();
@@ -66,6 +72,13 @@ namespace Server.Runner
             int i;
             try
             {
+                if(_game.IsGameReadyToStart)
+                {
+                    var clientId = _clients[client];
+                    string str = $"Your id is{_clients}: Welcome in PoloGame! Send your number to the server.";
+                    Byte[] reply = System.Text.Encoding.ASCII.GetBytes(str);
+                    stream.Write(reply, 0, reply.Length);
+                }
                 while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
                 {
                     string hex = BitConverter.ToString(bytes);
@@ -75,6 +88,7 @@ namespace Server.Runner
                     Byte[] reply = System.Text.Encoding.ASCII.GetBytes(str);
                     stream.Write(reply, 0, reply.Length);
                     _logger.LogInformation("{1}: Sent: {0}", str, Thread.CurrentThread.ManagedThreadId);
+                    //todo somewhere here client engine
                 }
             }
             catch (Exception e)
