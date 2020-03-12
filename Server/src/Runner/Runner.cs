@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -48,11 +47,15 @@ namespace Server.Runner
                 {
                     _logger.LogInformation("Waiting for a connection...");
                     TcpClient client = await server.AcceptTcpClientAsync();
-                    _logger.LogInformation("Connected!");
-                    var clientId = new Guid().ToString();
+                    var clientId = Guid.NewGuid().ToString();
+                    _logger.LogInformation($"Client: {clientId} connected! Waiting for more players...");
                     _clients.TryAdd(client, clientId);
                     _game.AddPlayer(clientId);
                     Thread t = new Thread(new ParameterizedThreadStart(HandleDevice));
+                    // if(_game.IsGameReadyToStart)
+                    // {
+                    //     _logger.LogInformation($"Game will be started soon...");
+                    // }
                 }
             }
             catch (SocketException e)
